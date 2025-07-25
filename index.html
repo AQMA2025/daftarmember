@@ -70,22 +70,6 @@
         }
       }
 
-      .logo-placeholder {
-        width: 120px;
-        height: 60px;
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px dashed rgba(255, 255, 255, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        border-radius: 10px;
-        color: white;
-        font-size: 12px;
-        z-index: 2;
-        position: relative;
-      }
-
       .header-title {
         color: white;
         font-size: 24px;
@@ -221,10 +205,6 @@
         .form-row {
           grid-template-columns: 1fr 1fr;
         }
-
-        .form-row.three-cols {
-          grid-template-columns: 1fr 1fr 1fr;
-        }
       }
 
       .submit-btn {
@@ -239,17 +219,11 @@
         cursor: pointer;
         transition: all 0.3s ease;
         margin-top: 20px;
-        position: relative;
-        overflow: hidden;
       }
 
       .submit-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
-      }
-
-      .submit-btn:active {
-        transform: translateY(0);
       }
 
       .submit-btn:disabled {
@@ -327,7 +301,6 @@
         text-align: center;
         max-width: 400px;
         width: 90%;
-        position: relative;
       }
 
       .success-icon {
@@ -376,6 +349,13 @@
         cursor: pointer;
         font-size: 14px;
         font-weight: 600;
+      }
+
+      .error-message {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+        display: none;
       }
     </style>
   </head>
@@ -433,6 +413,9 @@
               name="namaLengkap"
               required
             />
+            <div class="error-message" id="error-namaLengkap">
+              Nama lengkap harus diisi
+            </div>
           </div>
 
           <div class="form-row">
@@ -446,6 +429,9 @@
                 <option value="Mbak">Mbak</option>
                 <option value="Kak">Kak</option>
               </select>
+              <div class="error-message" id="error-sapaan">
+                Sapaan harus dipilih
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">Panggilan *</label>
@@ -456,6 +442,9 @@
                 name="panggilan"
                 required
               />
+              <div class="error-message" id="error-panggilan">
+                Panggilan harus diisi
+              </div>
             </div>
           </div>
 
@@ -469,38 +458,22 @@
               placeholder="Contoh: 08123456789"
               required
             />
+            <div class="error-message" id="error-nomorHP">
+              Nomor HP harus diisi dengan format yang benar
+            </div>
           </div>
 
-          <div class="form-row three-cols">
-            <div class="form-group">
-              <label class="form-label">Tanggal *</label>
-              <select class="form-select" id="tanggal" name="tanggal" required>
-                <option value="">Tanggal</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Bulan *</label>
-              <select class="form-select" id="bulan" name="bulan" required>
-                <option value="">Bulan</option>
-                <option value="01">Januari</option>
-                <option value="02">Februari</option>
-                <option value="03">Maret</option>
-                <option value="04">April</option>
-                <option value="05">Mei</option>
-                <option value="06">Juni</option>
-                <option value="07">Juli</option>
-                <option value="08">Agustus</option>
-                <option value="09">September</option>
-                <option value="10">Oktober</option>
-                <option value="11">November</option>
-                <option value="12">Desember</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Tahun *</label>
-              <select class="form-select" id="tahun" name="tahun" required>
-                <option value="">Tahun</option>
-              </select>
+          <div class="form-group">
+            <label class="form-label">Tanggal Lahir *</label>
+            <input
+              type="date"
+              class="form-input"
+              id="tanggalLahir"
+              name="tanggalLahir"
+              required
+            />
+            <div class="error-message" id="error-tanggalLahir">
+              Tanggal lahir harus diisi
             </div>
           </div>
 
@@ -516,6 +489,9 @@
                 <option value="Buddha">Buddha</option>
                 <option value="Konghucu">Konghucu</option>
               </select>
+              <div class="error-message" id="error-agama">
+                Agama harus dipilih
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">Jenis Kelamin *</label>
@@ -529,6 +505,9 @@
                 <option value="Laki-laki">Laki-laki</option>
                 <option value="Perempuan">Perempuan</option>
               </select>
+              <div class="error-message" id="error-jenisKelamin">
+                Jenis kelamin harus dipilih
+              </div>
             </div>
           </div>
 
@@ -541,6 +520,9 @@
               placeholder="Masukkan alamat lengkap Anda"
               required
             ></textarea>
+            <div class="error-message" id="error-alamat">
+              Alamat harus diisi
+            </div>
           </div>
 
           <button type="submit" class="submit-btn">
@@ -579,59 +561,166 @@
     </div>
 
     <script>
-      // Function untuk mengisi dropdown tanggal dan tahun
-      function populateDateDropdowns() {
-        const tanggalSelect = document.getElementById("tanggal");
-        const tahunSelect = document.getElementById("tahun");
-
-        // Mengisi dropdown tanggal (1-31)
-        for (let i = 1; i <= 31; i++) {
-          const option = document.createElement("option");
-          option.value = i.toString().padStart(2, "0");
-          option.textContent = i;
-          tanggalSelect.appendChild(option);
-        }
-
-        // Mengisi dropdown tahun (dari 1950 sampai tahun sekarang)
-        const currentYear = new Date().getFullYear();
-        for (let year = currentYear; year >= 1950; year--) {
-          const option = document.createElement("option");
-          option.value = year;
-          option.textContent = year;
-          tahunSelect.appendChild(option);
-        }
-      }
+      // GANTI URL ini dengan Web App URL dari Google Apps Script Anda
+      const GOOGLE_SHEETS_URL =
+        "https://script.google.com/macros/s/AKfycbzc3uaQkF0MGQIevejeaKeFe32MgVhtjpFrsE4TzokaVrAuYozyrF8nWSZZLlzraGP4Nw/exec";
 
       // Function untuk close success popup
       function closeSuccessPopup() {
         document.getElementById("successPopup").style.display = "none";
       }
 
-      // Panggil function untuk mengisi dropdown saat halaman dimuat
-      document.addEventListener("DOMContentLoaded", function () {
-        populateDateDropdowns();
-      });
+      // Function untuk validasi form
+      function validateForm(data) {
+        let isValid = true;
+        const errors = {};
 
-      // GANTI URL ini dengan Web App URL dari Google Apps Script Anda
-      const GOOGLE_SHEETS_URL =
-        "https://script.google.com/macros/s/AKfycbyGngVYBH0VpLGwdkSgx6q95K1PTDjByyBWDft0fpe3hXT8kvYoLPj5UeZOOQ1li2G29Q/exec";
+        // Reset error messages
+        document.querySelectorAll(".error-message").forEach((el) => {
+          el.style.display = "none";
+        });
+
+        // Validasi setiap field
+        const requiredFields = {
+          namaLengkap: "Nama lengkap",
+          sapaan: "Sapaan",
+          panggilan: "Panggilan",
+          nomorHP: "Nomor HP",
+          tanggalLahir: "Tanggal lahir",
+          agama: "Agama",
+          jenisKelamin: "Jenis kelamin",
+          alamat: "Alamat",
+        };
+
+        Object.keys(requiredFields).forEach((field) => {
+          const value = data[field];
+          if (!value || value === "" || value.toString().trim() === "") {
+            errors[field] = `${requiredFields[field]} harus diisi`;
+            isValid = false;
+          }
+        });
+
+        // Validasi format nomor HP
+        if (data.nomorHP && data.nomorHP !== "") {
+          const phoneRegex = /^(\+62|62|0)[0-9]{9,13}$/;
+          const cleanPhone = data.nomorHP.replace(/\D/g, "");
+          if (
+            !phoneRegex.test(cleanPhone) &&
+            !phoneRegex.test("0" + cleanPhone)
+          ) {
+            errors.nomorHP = "Format nomor HP tidak valid";
+            isValid = false;
+          }
+        }
+
+        // Validasi tanggal lahir
+        if (data.tanggalLahir && data.tanggalLahir !== "") {
+          const birthDate = new Date(data.tanggalLahir);
+          const today = new Date();
+          if (birthDate > today) {
+            errors.tanggalLahir = "Tanggal lahir tidak boleh di masa depan";
+            isValid = false;
+          }
+        }
+
+        // Tampilkan error messages
+        Object.keys(errors).forEach((field) => {
+          const errorEl = document.getElementById(`error-${field}`);
+          if (errorEl) {
+            errorEl.textContent = errors[field];
+            errorEl.style.display = "block";
+          }
+        });
+
+        return isValid;
+      }
+
+      // Function untuk collect form data
+      function collectFormData() {
+        const data = {};
+        const fields = [
+          "namaLengkap",
+          "sapaan",
+          "panggilan",
+          "nomorHP",
+          "tanggalLahir",
+          "agama",
+          "jenisKelamin",
+          "alamat",
+        ];
+
+        fields.forEach((field) => {
+          const element = document.getElementById(field);
+          if (element) {
+            data[field] = String(element.value || "").trim();
+          } else {
+            data[field] = "";
+          }
+        });
+
+        return data;
+      }
+
+      // Function untuk format nomor HP
+      function formatPhoneNumber(phone) {
+        let cleanPhone = phone.replace(/\D/g, "");
+
+        if (cleanPhone.startsWith("0")) {
+          cleanPhone = "62" + cleanPhone.substring(1);
+        } else if (cleanPhone.startsWith("8")) {
+          cleanPhone = "62" + cleanPhone;
+        } else if (!cleanPhone.startsWith("62")) {
+          cleanPhone = "62" + cleanPhone;
+        }
+
+        return cleanPhone;
+      }
 
       // Function untuk menyimpan data ke Google Sheets
       async function saveToGoogleSheets(data) {
         try {
+          // Prepare clean data
+          const cleanData = {
+            namaLengkap: String(data.namaLengkap || "").trim(),
+            sapaan: String(data.sapaan || "").trim(),
+            panggilan: String(data.panggilan || "").trim(),
+            nomorHP: String(data.nomorHP || "").trim(),
+            tanggalLahir: String(data.tanggalLahir || "").trim(),
+            agama: String(data.agama || "").trim(),
+            jenisKelamin: String(data.jenisKelamin || "").trim(),
+            alamat: String(data.alamat || "").trim(),
+          };
+
+          // FIX CORS ISSUE: Use text/plain content type
           const response = await fetch(GOOGLE_SHEETS_URL, {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "text/plain;charset=utf-8",
             },
-            body: JSON.stringify(data),
-            mode: "no-cors", // Important for Google Apps Script
+            body: JSON.stringify(cleanData),
           });
 
-          console.log("Data berhasil disimpan ke Google Sheets");
-          return { success: true };
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const responseText = await response.text();
+          let responseData = null;
+
+          try {
+            responseData = JSON.parse(responseText);
+          } catch (parseError) {
+            console.log("Response is not JSON:", responseText);
+          }
+
+          // Check if response indicates success
+          if (responseData && responseData.success === false) {
+            throw new Error(responseData.error || "Server returned error");
+          }
+
+          return { success: true, data: responseData };
         } catch (error) {
-          console.error("Error saving to Google Sheets:", error);
+          console.error("Error in saveToGoogleSheets:", error);
           throw error;
         }
       }
@@ -642,47 +731,27 @@
         .addEventListener("submit", async function (e) {
           e.preventDefault();
 
+          // Collect form data
+          const data = collectFormData();
+
+          // Validate form
+          if (!validateForm(data)) {
+            return;
+          }
+
           // Show loading
           document.getElementById("loadingOverlay").style.display = "flex";
 
-          // Get form data
-          const formData = new FormData(this);
-          const data = Object.fromEntries(formData);
+          try {
+            // Format phone number
+            data.nomorHP = formatPhoneNumber(data.nomorHP);
 
-          // Format tanggal lahir menjadi format YYYY-MM-DD
-          if (data.tahun && data.bulan && data.tanggal) {
-            data.tanggalLahir = `${data.tahun}-${data.bulan}-${data.tanggal}`;
-          }
+            // Save to Google Sheets
+            const result = await saveToGoogleSheets(data);
 
-          // Format phone number for WhatsApp (remove leading 0, add 62)
-          let whatsappNumber = data.nomorHP.replace(/\D/g, "");
-          if (whatsappNumber.startsWith("0")) {
-            whatsappNumber = "62" + whatsappNumber.substring(1);
-          } else if (!whatsappNumber.startsWith("62")) {
-            whatsappNumber = "62" + whatsappNumber;
-          }
-
-          // Update nomor HP di data dengan format yang benar
-          data.nomorHP = whatsappNumber;
-
-          // Get month name for WhatsApp message (convert from number back to name)
-          const bulanNames = {
-            "01": "Januari",
-            "02": "Februari",
-            "03": "Maret",
-            "04": "April",
-            "05": "Mei",
-            "06": "Juni",
-            "07": "Juli",
-            "08": "Agustus",
-            "09": "September",
-            10: "Oktober",
-            11: "November",
-            12: "Desember",
-          };
-
-          // Prepare WhatsApp message
-          const whatsappMessage = `Terima kasih ${data.sapaan} ${data.panggilan} telah mendaftar menjadi member Aqshamart Community.
+            // Send WhatsApp message (optional)
+            try {
+              const whatsappMessage = `Terima kasih ${data.sapaan} ${data.panggilan} telah mendaftar menjadi member Aqshamart Community.
 
 Setelah menerima pesan ini, *${data.sapaan}* *${data.panggilan}* langsung dapat menikmati berbagai BENEFIT dari Aqshamart antara lain :
 - Prioritas mendapatkan informasi promo atas berbagai produk 
@@ -698,31 +767,26 @@ _Nomor ini khusus pengiriman pesan notifikasi, sedangkan untuk layanan pesan ant
 
 tunjukkan pesan ini di kasir untuk klaim hadiah selama persediaan masih ada`;
 
-          try {
-            // Simulate processing time
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            // Save to Google Sheets FIRST
-            await saveToGoogleSheets(data);
-            console.log("Data tersimpan ke Google Sheets");
-
-            // Then send WhatsApp message
-            const whatsappResponse = await fetch(
-              "https://crm.woo-wa.com/send/message-text",
-              {
+              await fetch("https://crm.woo-wa.com/send/message-text", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                   deviceId: "d_ID@6753a3309becd_lLMQ0PrnAMfGf",
-                  number: whatsappNumber,
+                  number: data.nomorHP,
                   message: whatsappMessage,
                 }),
-              }
-            );
+              });
+            } catch (whatsappError) {
+              console.log(
+                "WhatsApp sending failed (but registration was successful):",
+                whatsappError
+              );
+            }
 
-            console.log("WhatsApp API Response:", whatsappResponse);
+            // Processing delay
+            await new Promise((resolve) => setTimeout(resolve, 1500));
 
             // Hide loading
             document.getElementById("loadingOverlay").style.display = "none";
@@ -733,15 +797,38 @@ tunjukkan pesan ini di kasir untuk klaim hadiah selama persediaan masih ada`;
             // Reset form
             this.reset();
           } catch (error) {
-            console.error("Error:", error);
+            console.error("Registration failed:", error);
+
             // Hide loading
             document.getElementById("loadingOverlay").style.display = "none";
 
-            // Still show success popup
-            document.getElementById("successPopup").style.display = "flex";
-            this.reset();
+            // Show error message
+            alert(
+              `Pendaftaran gagal: ${error.message}\n\nSilakan coba lagi atau hubungi customer service.`
+            );
           }
         });
+
+      // Real-time validation
+      document
+        .querySelectorAll(".form-input, .form-select, .form-textarea")
+        .forEach((input) => {
+          input.addEventListener("blur", function () {
+            const data = collectFormData();
+            validateForm(data);
+          });
+
+          // Clear error on focus
+          input.addEventListener("focus", function () {
+            const fieldName = this.name;
+            const errorEl = document.getElementById(`error-${fieldName}`);
+            if (errorEl) {
+              errorEl.style.display = "none";
+            }
+          });
+        });
+
+      console.log("Form initialized successfully");
     </script>
   </body>
 </html>
