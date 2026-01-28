@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -61,6 +62,7 @@
             0% {
                 transform: translateX(0) translateY(0);
             }
+
             100% {
                 transform: translateX(-50px) translateY(-50px);
             }
@@ -265,6 +267,7 @@
             0% {
                 transform: rotate(0deg);
             }
+
             100% {
                 transform: rotate(360deg);
             }
@@ -426,7 +429,8 @@
 
                 <div class="form-group">
                     <label class="form-label">Nomor HP (WhatsApp) *</label>
-                    <input type="tel" class="form-input" id="nomorHP" name="nomorHP" placeholder="Contoh: 628123456789" required />
+                    <input type="tel" class="form-input" id="nomorHP" name="nomorHP" placeholder="Contoh: 628123456789"
+                        required />
                     <div class="error-message" id="error-nomorHP">Nomor HP harus diisi dengan format yang benar</div>
                 </div>
 
@@ -463,7 +467,8 @@
 
                 <div class="form-group">
                     <label class="form-label">Alamat Lengkap *</label>
-                    <textarea class="form-textarea" id="alamat" name="alamat" placeholder="Contoh: Cluster Centro Havana Blok MA/7" required></textarea>
+                    <textarea class="form-textarea" id="alamat" name="alamat"
+                        placeholder="Contoh: Cluster Centro Havana Blok MA/7" required></textarea>
                     <div class="error-message" id="error-alamat">Alamat harus diisi</div>
                 </div>
 
@@ -493,13 +498,123 @@
             <div class="success-instruction">
                 <strong>Tunjukkan pop-up ini ke kasir atau call center kami untuk mendapatkan benefit member!</strong>
             </div>
+            <div id="whatsapp-status"
+                style="margin-bottom: 15px; padding: 10px; border-radius: 5px; font-size: 12px; display: none;">
+                <!-- WhatsApp status will be updated here -->
+            </div>
             <button class="close-btn" onclick="closeSuccessPopup()">Tutup</button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // GANTI URL ini dengan Web App URL dari Google Apps Script Anda
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://cgvgevgywnfmeatoydwl.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNndmdldmd5d25mbWVhdG95ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0OTIzOTAsImV4cCI6MjA4NDA2ODM5MH0.XIGPRUtBHjysTWa6VLhMMmUUi7R2KDSRvfjsc7j3-rs'
+
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        // Google Sheets backup URL
         const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzc3uaQkF0MGQIevejeaKeFe32MgVhtjpFrsE4TzokaVrAuYozyrF8nWSZZLlzraGP4Nw/exec";
+
+        // Function untuk menyimpan data ke Supabase (Primary)
+        async function saveToSupabase(data) {
+            try {
+                // Calculate age from birth date
+                const birthDate = new Date(data.tanggalLahir);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                // Prepare data for Supabase
+                const memberData = {
+                    registration_date: new Date().toISOString().split('T')[0],
+                    full_name: data.namaLengkap,
+                    title: data.sapaan,
+                    nickname: data.panggilan,
+                    phone: data.nomorHP,
+                    birth_date: data.tanggalLahir,
+                    age: age,
+                    religion: data.agama,
+                    gender: data.jenisKelamin.toLowerCase(),
+                    address: data.alamat,
+                    status: 'Member',
+                    birthday_greeting_status: null
+                };
+
+                console.log('Saving to Supabase:', memberData);
+
+                // Insert data to Supabase
+                const { data: insertedData, error } = await supabase
+                    .from('members')
+                    .insert([memberData])
+                    .select();
+
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw new Error(`Supabase error: ${error.message}`);
+                }
+
+                console.log('Successfully saved to Supabase:', insertedData);
+                return { success: true, data: insertedData[0] };
+
+            } catch (error) {
+                console.error('Error saving to Supabase:', error);
+                throw error;
+            }
+        }
+
+        // Function untuk menyimpan data ke Google Sheets (Backup)
+        async function saveToGoogleSheets(data) {
+            try {
+                // Prepare clean data
+                const cleanData = {
+                    namaLengkap: String(data.namaLengkap || "").trim(),
+                    sapaan: String(data.sapaan || "").trim(),
+                    panggilan: String(data.panggilan || "").trim(),
+                    nomorHP: String(data.nomorHP || "").trim(),
+                    tanggalLahir: String(data.tanggalLahir || "").trim(),
+                    agama: String(data.agama || "").trim(),
+                    jenisKelamin: String(data.jenisKelamin || "").trim(),
+                    alamat: String(data.alamat || "").trim(),
+                };
+
+                // FIX CORS ISSUE: Use text/plain content type
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8",
+                    },
+                    body: JSON.stringify(cleanData),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const responseText = await response.text();
+                let responseData = null;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.log("Response is not JSON:", responseText);
+                }
+
+                // Check if response indicates success
+                if (responseData && responseData.success === false) {
+                    throw new Error(responseData.error || "Server returned error");
+                }
+
+                return { success: true, data: responseData };
+            } catch (error) {
+                console.error("Error in saveToGoogleSheets:", error);
+                throw error;
+            }
+        }
 
         // Function untuk close success popup
         function closeSuccessPopup() {
@@ -607,7 +722,53 @@
             return cleanPhone;
         }
 
-        // Function untuk menyimpan data ke Google Sheets
+        // Function untuk menyimpan data ke Supabase
+        async function saveToSupabase(data) {
+            try {
+                // Calculate age from birth date
+                const birthDate = new Date(data.tanggalLahir)
+                const today = new Date()
+                let age = today.getFullYear() - birthDate.getFullYear()
+                const monthDiff = today.getMonth() - birthDate.getMonth()
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--
+                }
+
+                // Prepare data for Supabase members table
+                const memberData = {
+                    registration_date: new Date().toISOString().split('T')[0],
+                    full_name: data.namaLengkap,
+                    title: data.sapaan,
+                    nickname: data.panggilan,
+                    phone: data.nomorHP,
+                    birth_date: data.tanggalLahir,
+                    age: age,
+                    religion: data.agama,
+                    gender: data.jenisKelamin.toLowerCase(),
+                    address: data.alamat,
+                    status: 'Member',
+                    birthday_greeting_status: 'pending'
+                }
+
+                console.log('Saving to Supabase:', memberData)
+
+                const { data: result, error } = await supabase
+                    .from('members')
+                    .insert([memberData])
+                    .select()
+
+                if (error) {
+                    console.error('Supabase error:', error)
+                    throw new Error(`Database error: ${error.message}`)
+                }
+
+                console.log('Supabase success:', result)
+                return { success: true, data: result[0] }
+            } catch (error) {
+                console.error('Error in saveToSupabase:', error)
+                throw error
+            }
+        }       // Function untuk menyimpan data ke Google Sheets (backup)
         async function saveToGoogleSheets(data) {
             try {
                 // Prepare clean data
@@ -674,10 +835,44 @@
                 // Format phone number
                 data.nomorHP = formatPhoneNumber(data.nomorHP);
 
-                // Save to Google Sheets
-                const result = await saveToGoogleSheets(data);
+                // Primary: Save to Supabase database
+                let supabaseResult = null;
+                try {
+                    supabaseResult = await saveToSupabase(data);
+                    console.log('✅ Successfully saved to Supabase:', supabaseResult);
+                } catch (supabaseError) {
+                    console.error('❌ Supabase save failed:', supabaseError);
 
-                // Send WhatsApp message (optional)
+                    // Check if it's a network error or database error
+                    if (supabaseError.message.includes('fetch')) {
+                        console.log('🌐 Network error detected, continuing with backup...');
+                    } else {
+                        console.log('🗄️ Database error detected, continuing with backup...');
+                    }
+                }
+
+                // Backup: Save to Google Sheets
+                let sheetsResult = null;
+                try {
+                    sheetsResult = await saveToGoogleSheets(data);
+                    console.log('✅ Successfully saved to Google Sheets (backup):', sheetsResult);
+                } catch (sheetsError) {
+                    console.error('❌ Google Sheets backup failed:', sheetsError);
+                }
+
+                // If both failed, throw error
+                if (!supabaseResult && !sheetsResult) {
+                    throw new Error('Gagal menyimpan data ke semua database. Silakan coba lagi atau hubungi customer service.');
+                }
+
+                // Show success message based on what worked
+                if (supabaseResult) {
+                    console.log('✅ Registration successful via Supabase');
+                } else if (sheetsResult) {
+                    console.log('✅ Registration successful via Google Sheets backup');
+                }
+
+                // Send WhatsApp message (optional) - with CORS fallback
                 try {
                     const whatsappMessage = `Terima kasih *${data.sapaan}* *${data.panggilan}* telah mendaftar menjadi member Aqshamart Community.
 
@@ -693,8 +888,11 @@ Yang *SMART* selalu belanja di Aqshamart
 
 tunjukkan pesan ini di kasir untuk klaim hadiah selama persediaan masih ada`;
 
-                    // Updated WA Gateway configuration to match birthday crew system
-                    await fetch("https://nonleaking-cameron-eagerly.ngrok-free.dev/api/send", {
+                    // Try WA Gateway with CORS handling
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+                    const response = await fetch("https://nonleaking-cameron-eagerly.ngrok-free.dev/api/send", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -706,9 +904,44 @@ tunjukkan pesan ini di kasir untuk klaim hadiah selama persediaan masih ada`;
                             number: data.nomorHP,
                             message: whatsappMessage,
                         }),
+                        signal: controller.signal
                     });
+
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        console.log('✅ WhatsApp message sent successfully');
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
                 } catch (whatsappError) {
-                    console.log("WhatsApp sending failed (but registration was successful):", whatsappError);
+                    console.log("⚠️ WhatsApp Gateway failed, trying fallback method:", whatsappError);
+
+                    // Fallback: Open WhatsApp Web (works around CORS)
+                    try {
+                        const encodedMessage = encodeURIComponent(`Terima kasih ${data.sapaan} ${data.panggilan} telah mendaftar menjadi member Aqshamart Community. Setelah menerima pesan ini, ${data.sapaan} ${data.panggilan} langsung dapat menikmati berbagai BENEFIT dari Aqshamart. Tunjukkan pesan ini di kasir untuk klaim hadiah selama persediaan masih ada.`);
+                        const whatsappUrl = `https://wa.me/${data.nomorHP}?text=${encodedMessage}`;
+
+                        // Store the WhatsApp URL for manual sending
+                        window.whatsappFallbackUrl = whatsappUrl;
+                        console.log('📱 WhatsApp fallback URL ready:', whatsappUrl);
+
+                        // Show additional instruction in success popup
+                        const successInstruction = document.querySelector('.success-instruction');
+                        if (successInstruction) {
+                            successInstruction.innerHTML = `
+                                <strong>Tunjukkan pop-up ini ke kasir atau call center kami untuk mendapatkan benefit member!</strong>
+                                <br><br>
+                                <button onclick="window.open('${whatsappUrl}', '_blank')" 
+                                        style="background: #25D366; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                                    📱 Buka WhatsApp untuk Konfirmasi
+                                </button>
+                            `;
+                        }
+                    } catch (fallbackError) {
+                        console.log("⚠️ WhatsApp fallback also failed:", fallbackError);
+                    }
                 }
 
                 // Processing delay
@@ -753,5 +986,5 @@ tunjukkan pesan ini di kasir untuk klaim hadiah selama persediaan masih ada`;
         console.log("Form initialized successfully");
     </script>
 </body>
+
 </html>
-                
